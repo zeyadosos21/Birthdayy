@@ -7,10 +7,13 @@ window.BIRTHDAY_CONFIG = {
   supabaseAnonKey: "PASTE_SUPABASE_ANON_KEY_HERE",
 
   // Add photos/videos here after copying the files into /media.
-  // Keep the slider order exactly as you want it to appear.
+  // category MUST be one of: "21/6", "22/7", "Gym", "In Cairoo".
+  // "All Memories" is automatic and shows everything.
   media: [
-    // { type: "image", src: "media/photo1.jpg", caption: "Us 💖" },
-    // { type: "video", src: "media/intro.mp4", poster: "media/photo1.jpg", caption: "A little moment" },
+    // { type: "image", src: "media/photo1.jpg", category: "21/6", caption: "Us 💖" },
+    // { type: "image", src: "media/photo2.jpg", category: "22/7", caption: "A favorite day" },
+    // { type: "video", src: "media/gym1.mp4", category: "Gym", poster: "media/photo1.jpg", caption: "Gym day" },
+    // { type: "image", src: "media/cairo1.jpg", category: "In Cairoo", caption: "Cairoo 💖" },
   ],
 
   memories: [
