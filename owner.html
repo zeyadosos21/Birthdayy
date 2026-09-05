@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#fffaf6">
+  <title>Owner Dashboard • Malookkyyy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/config.js"></script>
+</head>
+<body class="owner-body" data-page="owner">
+  <div id="ownerLoading" class="owner-loading">Checking owner access…</div>
+
+  <section id="ownerLoginScreen" class="owner-login-screen hidden">
+    <div class="owner-login-card">
+      <p class="kicker">Private controls</p>
+      <h1>Owner Login</h1>
+      <p>Only your Supabase owner account can open this dashboard.</p>
+      <form id="ownerPageLoginForm" class="owner-login-form">
+        <input id="ownerPageEmail" class="shared-input" type="email" autocomplete="username" placeholder="Owner email" required>
+        <input id="ownerPagePassword" class="shared-input" type="password" autocomplete="current-password" placeholder="Owner password" required>
+        <button class="owner-primary" type="submit">Log in</button>
+      </form>
+      <div id="ownerPageLoginStatus" class="form-status"></div>
+      <a class="owner-back" href="index.html">← Back to site</a>
+    </div>
+  </section>
+
+  <div id="ownerDashboard" class="owner-dashboard hidden">
+    <aside class="owner-sidebar">
+      <div>
+        <p class="owner-small">Malookkyyy</p>
+        <h1>Owner Dashboard</h1>
+      </div>
+      <nav class="owner-menu" aria-label="Owner sections">
+        <button class="owner-menu-btn active" data-owner-tab="overview">Overview</button>
+        <button class="owner-menu-btn" data-owner-tab="gallery">Gallery</button>
+        <button class="owner-menu-btn" data-owner-tab="categories">Categories</button>
+        <button class="owner-menu-btn" data-owner-tab="memories">Memories</button>
+        <button class="owner-menu-btn" data-owner-tab="todo">To Do</button>
+        <button class="owner-menu-btn" data-owner-tab="songs">Wedding Songs</button>
+        <button class="owner-menu-btn" data-owner-tab="security">Security</button>
+      </nav>
+      <div class="owner-sidebar-actions">
+        <a href="index.html" class="owner-secondary">View site</a>
+        <button id="ownerLogout" class="owner-secondary" type="button">Log out</button>
+      </div>
+    </aside>
+
+    <main class="owner-main">
+      <section class="owner-panel" data-owner-panel="overview">
+        <p class="section-label">Owner only</p>
+        <h2>Everything in one place</h2>
+        <p class="owner-lead">Add photos and videos, change the Gallery slider, edit Memories, manage lists and change the 4-digit guest PIN without touching the code.</p>
+        <div class="owner-stat-grid">
+          <div class="owner-stat"><strong id="statMedia">—</strong><span>Gallery items</span></div>
+          <div class="owner-stat"><strong id="statCategories">—</strong><span>Categories</span></div>
+          <div class="owner-stat"><strong id="statMemories">—</strong><span>Memories</span></div>
+          <div class="owner-stat"><strong id="statNotes">—</strong><span>To-dos + songs</span></div>
+        </div>
+      </section>
+
+      <section class="owner-panel hidden" data-owner-panel="gallery">
+        <p class="section-label">Gallery media</p><h2>Photos & Videos</h2>
+        <p class="owner-lead">Upload here and the public Gallery updates automatically.</p>
+        <form id="mediaUploadForm" class="owner-form-card">
+          <!-- OWNER MEDIA UPLOAD: choose any JPG/PNG/WEBP/GIF/MP4/WEBM/MOV file here -->
+          <input id="mediaFile" class="shared-input" type="file" accept="image/*,video/*" required>
+          <select id="mediaCategory" class="shared-input" required></select>
+          <input id="mediaCaption" class="shared-input" maxlength="180" placeholder="Caption (optional)">
+          <button class="owner-primary" type="submit">Upload</button>
+        </form>
+        <div id="mediaUploadStatus" class="form-status"></div>
+        <div id="ownerMediaList" class="owner-list"></div>
+      </section>
+
+      <section class="owner-panel hidden" data-owner-panel="categories">
+        <p class="section-label">Gallery slider</p><h2>Categories</h2>
+        <p class="owner-lead"><b>All Memories</b> is automatic. Everything below it can be added, renamed, reordered or removed.</p>
+        <form id="categoryAddForm" class="owner-inline-form">
+          <input id="categoryName" class="shared-input" maxlength="60" placeholder="New category name" required>
+          <button class="owner-primary" type="submit">Add</button>
+        </form>
+        <div id="categoryStatus" class="form-status"></div>
+        <div id="ownerCategoryList" class="owner-list"></div>
+      </section>
+
+      <section class="owner-panel hidden" data-owner-panel="memories">
+        <p class="section-label">Timeline</p><h2>Memories</h2>
+        <form id="memoryAddForm" class="owner-form-card">
+          <input id="memoryTitle" class="shared-input" maxlength="80" placeholder="Title, e.g. 21/6" required>
+          <textarea id="memoryBody" class="shared-input owner-textarea" maxlength="300" placeholder="Text under it" required></textarea>
+          <button class="owner-primary" type="submit">Add memory</button>
+        </form>
+        <div id="memoryStatus" class="form-status"></div>
+        <div id="ownerMemoryList" class="owner-list"></div>
+      </section>
+
+      <section class="owner-panel hidden" data-owner-panel="todo">
+        <p class="section-label">Notes</p><h2>To Do List</h2>
+        <form id="ownerTodoAddForm" class="owner-inline-form">
+          <input id="ownerTodoInput" class="shared-input" maxlength="180" placeholder="Add a to-do" required>
+          <button class="owner-primary" type="submit">Add</button>
+        </form>
+        <div id="ownerTodoList" class="owner-list"></div>
+      </section>
+
+      <section class="owner-panel hidden" data-owner-panel="songs">
+        <p class="section-label">Notes</p><h2>Wedding Songs</h2>
+        <form id="ownerSongAddForm" class="owner-inline-form">
+          <input id="ownerSongInput" class="shared-input" maxlength="180" placeholder="Song name" required>
+          <button class="owner-primary" type="submit">Add</button>
+        </form>
+        <div id="ownerSongList" class="owner-list"></div>
+      </section>
+
+      <section class="owner-panel hidden" data-owner-panel="security">
+        <p class="section-label">Guest access</p><h2>Site Password</h2>
+        <p class="owner-lead">This is the 4-digit code visitors type on the lock screen. Your owner email/password stays separate.</p>
+        <form id="pinForm" class="owner-form-card owner-pin-form">
+          <input id="newPin" class="shared-input" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="New 4-digit PIN" required>
+          <input id="confirmPin" class="shared-input" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Confirm PIN" required>
+          <button class="owner-primary" type="submit">Change site PIN</button>
+        </form>
+        <div id="pinStatus" class="form-status"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/owner.js"></script>
+</body>
+</html>

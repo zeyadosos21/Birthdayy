@@ -1,67 +1,37 @@
-# Malookkyyy Birthday Site — Setup
+# Malookkyyy Birthday Site — V5 Setup
 
-## 1. Add your photos and videos
+This version has the full Owner Dashboard. The website stays on the same GitHub Pages URL; Supabase is only the database, authentication and media storage.
 
-Put your files in the `media/` folder.
+## What the owner can edit without touching code
+- 4-digit guest PIN
+- Gallery photos/videos
+- Gallery category slider (add, rename, reorder, delete)
+- Photo/video caption and category
+- Memories timeline (add, edit, reorder, delete)
+- To Do List (add, edit, complete, delete)
+- Wedding Songs (add, edit, delete)
 
-Then open:
+## Supabase setup
+1. Create a new Supabase project.
+2. Open **SQL Editor** and run the complete file `supabase/setup.sql`.
+3. Open **Authentication > Users** and create ONE owner user with your email and a strong password.
+4. Open `supabase/owner.sql`, replace `REPLACE_WITH_YOUR_OWNER_EMAIL` with that exact email, then run it in SQL Editor.
+5. In Supabase, copy your **Project URL** and **Publishable key**.
+6. Open `assets/js/config.js` and paste them into:
+   - `supabaseUrl`
+   - `supabasePublishableKey`
+7. Push the site to GitHub Pages.
 
-`assets/js/config.js`
+## Starting guest PIN
+`2912`
 
-You will see a big commented section called **ADD YOUR PHOTOS + VIDEOS HERE**.
-Copy one of the examples and change the filename/category/caption.
+Change it later from **Owner Dashboard > Security**.
 
-Allowed categories are exactly:
+## Owner dashboard
+Open `owner.html`, or use **Notes > Owner controls** to log in. The dashboard verifies the signed-in account against `birthday_admins`.
 
-- `21/6`
-- `22/7`
-- `Gym`
-- `In Cairoo`
+## Gallery uploads
+The owner dashboard uploads files to the Supabase Storage bucket `gallery-media`. Public Gallery metadata is still protected by the 4-digit site PIN. Storage files use public URLs so they display on static GitHub Pages.
 
-**All Memories is automatic.** It combines every category and shuffles the order when it opens.
-
-## 2. Shared To Do List + Wedding Songs
-
-GitHub Pages can host the website, but it cannot permanently save new visitor data by itself. The site therefore keeps GitHub Pages as the host and uses Supabase only as the small database.
-
-1. Create a free Supabase project.
-2. Open **SQL Editor**.
-3. Open `supabase/setup.sql` from this project and run it.
-4. In Supabase, open **Project Settings > API**.
-5. Copy the Project URL and anon/public key.
-6. Paste both into `assets/js/config.js`.
-
-The NFC/GitHub Pages link does not change.
-
-## 3. Owner delete controls (optional)
-
-If you want only yourself to delete bad/duplicate to-dos and songs:
-
-1. In Supabase Authentication, create your owner user with email/password.
-2. Copy that user's UUID.
-3. Replace `REPLACE_WITH_YOUR_ADMIN_USER_UUID` inside `supabase/setup.sql` with that UUID before running the owner delete functions.
-4. Use **Owner controls** at the bottom of the Notes page to log in.
-
-## 4. Password
-
-The site uses the four-digit password you already chose. The repository stores only its SHA-256 hash, not the plain code.
-
-When Supabase is connected, the same hashed-code check is used there too.
-
-## 5. Push to the existing GitHub repo
-
-Keep the repository named `Birthdayy` so this link stays the same:
-
-`https://zeyadosos21.github.io/Birthdayy/`
-
-From the existing local repo folder:
-
-```powershell
-git add -A
-git commit -m "Build final Malookkyyy birthday site"
-git push origin main
-```
-
-
-## Song form
-The public Wedding Songs form intentionally asks for **Song name only**. The database stores `Guest` internally only for compatibility; it is not shown on the site.
+## Important security rule
+Only put the **Publishable key** in the site. Never put a Supabase Secret/Service Role key in GitHub or browser JavaScript.

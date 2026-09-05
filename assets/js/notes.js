@@ -16,206 +16,133 @@
   const adminForm = document.getElementById("adminForm");
   const adminStatus = document.getElementById("adminStatus");
   const adminLogout = document.getElementById("adminLogout");
-  let adminMode = false;
+  const ownerOpen = document.getElementById("ownerOpen");
+  let refreshTimer = null;
 
-  function status(el, text, type = "") {
+  function setStatus(el, text, type = "") {
     if (!el) return;
     el.textContent = text;
     el.className = `form-status${type ? ` ${type}` : ""}`;
   }
-
   function setTab(name) {
     tabButtons.forEach(button => button.classList.toggle("active", button.dataset.notesTab === name));
     panels.forEach(panel => panel.classList.toggle("hidden", panel.dataset.notesPanel !== name));
   }
-
   tabButtons.forEach(button => button.addEventListener("click", () => setTab(button.dataset.notesTab)));
 
   function backendMessage(type) {
     const text = "Connect Supabase using SETUP.md so everyone sees the same shared list.";
-    if (type === "todo") todoList.innerHTML = `<div class="shared-empty"><p>${text}</p></div>`;
-    else songList.innerHTML = `<div class="shared-empty"><p>${text}</p></div>`;
+    (type === "todo" ? todoList : songList).innerHTML = `<div class="shared-empty"><p>${text}</p></div>`;
   }
 
   function todoRow(todo) {
     const row = document.createElement("article");
     row.className = `todo-row${todo.completed ? " completed" : ""}`;
-
     const check = document.createElement("button");
     check.type = "button";
     check.className = "todo-check";
-    check.setAttribute("aria-label", todo.completed ? "Mark as not done" : "Mark as done");
     check.innerHTML = todo.completed ? "✓" : "";
     check.addEventListener("click", async () => {
       if (!ready) return;
       check.disabled = true;
-      const { error } = await supa.rpc("set_todo_completed", {
-        p_todo_id: todo.id,
-        p_completed: !todo.completed,
-        p_code: code()
-      });
+      const { error } = await supa.rpc("set_todo_completed", { p_todo_id: todo.id, p_completed: !todo.completed, p_code: code() });
       check.disabled = false;
       if (error) alert(error.message); else loadTodos();
     });
-
     const copy = document.createElement("div");
     copy.className = "todo-copy";
-    const title = document.createElement("p");
-    title.textContent = todo.item;
+    const title = document.createElement("p"); title.textContent = todo.item;
     const date = document.createElement("span");
     date.textContent = new Date(todo.created_at).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
-    copy.append(title, date);
-
-    row.append(check, copy);
-
-    if (adminMode) {
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "owner-delete";
-      del.textContent = "Delete";
-      del.addEventListener("click", async () => {
-        if (!confirm("Delete this to-do?")) return;
-        const { error } = await supa.rpc("delete_todo_admin", { p_todo_id: todo.id });
-        if (error) alert(error.message); else loadTodos();
-      });
-      row.appendChild(del);
-    }
-
-    return row;
+    copy.append(title, date); row.append(check, copy); return row;
   }
-
   function songRow(song) {
-    const row = document.createElement("article");
-    row.className = "song-row";
-    const copy = document.createElement("div");
-    const title = document.createElement("p");
-    title.textContent = song.song;
-    copy.append(title);
-    row.appendChild(copy);
-
-    if (adminMode) {
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "owner-delete";
-      del.textContent = "Delete";
-      del.addEventListener("click", async () => {
-        if (!confirm("Delete this song?")) return;
-        const { error } = await supa.rpc("delete_song_admin", { p_song_id: song.id });
-        if (error) alert(error.message); else loadSongs();
-      });
-      row.appendChild(del);
-    }
-
-    return row;
+    const row = document.createElement("article"); row.className = "song-row";
+    const copy = document.createElement("div"); const title = document.createElement("p"); title.textContent = song.song;
+    copy.append(title); row.appendChild(copy); return row;
   }
 
   async function loadTodos() {
     if (!todoList) return;
     if (!ready) return backendMessage("todo");
-    todoList.innerHTML = `<div class="shared-empty"><p>Loading…</p></div>`;
     const { data, error } = await supa.rpc("get_todos", { p_code: code() });
-    if (error) {
-      todoList.innerHTML = `<div class="shared-empty error"><p>${error.message}</p></div>`;
-      return;
-    }
+    if (error) return todoList.innerHTML = `<div class="shared-empty error"><p>${error.message}</p></div>`;
     todoList.innerHTML = "";
-    if (!data?.length) {
-      todoList.innerHTML = `<div class="shared-empty"><p>No to-dos yet. Add the first one.</p></div>`;
-      return;
-    }
+    if (!data?.length) return todoList.innerHTML = `<div class="shared-empty"><p>No to-dos yet. Add the first one.</p></div>`;
     data.forEach(todo => todoList.appendChild(todoRow(todo)));
   }
-
   async function loadSongs() {
     if (!songList) return;
     if (!ready) return backendMessage("song");
-    songList.innerHTML = `<div class="shared-empty"><p>Loading…</p></div>`;
     const { data, error } = await supa.rpc("get_wedding_songs", { p_code: code() });
-    if (error) {
-      songList.innerHTML = `<div class="shared-empty error"><p>${error.message}</p></div>`;
-      return;
-    }
+    if (error) return songList.innerHTML = `<div class="shared-empty error"><p>${error.message}</p></div>`;
     songList.innerHTML = "";
-    if (!data?.length) {
-      songList.innerHTML = `<div class="shared-empty"><p>No songs yet. Add the first suggestion.</p></div>`;
-      return;
-    }
+    if (!data?.length) return songList.innerHTML = `<div class="shared-empty"><p>No songs yet. Add the first suggestion.</p></div>`;
     data.forEach(song => songList.appendChild(songRow(song)));
   }
 
   todoForm?.addEventListener("submit", async event => {
     event.preventDefault();
-    if (!ready) return status(todoStatus, "Connect Supabase first using SETUP.md.", "error");
+    if (!ready) return setStatus(todoStatus, "Connect Supabase first using SETUP.md.", "error");
     const item = todoInput.value.trim();
-    if (item.length < 2) return status(todoStatus, "Write a to-do first.", "error");
-    const submit = todoForm.querySelector("button[type=submit]");
-    submit.disabled = true;
-    const { error } = await supa.rpc("add_todo", { p_item: item, p_code: code() });
-    submit.disabled = false;
-    if (error) return status(todoStatus, error.message, "error");
-    todoForm.reset();
-    status(todoStatus, "Added.", "success");
-    loadTodos();
+    if (item.length < 2) return setStatus(todoStatus, "Write a to-do first.", "error");
+    const submit = todoForm.querySelector("button[type=submit]"); submit.disabled = true;
+    const { error } = await supa.rpc("add_todo", { p_item: item, p_code: code() }); submit.disabled = false;
+    if (error) return setStatus(todoStatus, error.message, "error");
+    todoForm.reset(); setStatus(todoStatus, "Added.", "success"); loadTodos();
   });
 
   songForm?.addEventListener("submit", async event => {
     event.preventDefault();
-    if (!ready) return status(songStatus, "Connect Supabase first using SETUP.md.", "error");
+    if (!ready) return setStatus(songStatus, "Connect Supabase first using SETUP.md.", "error");
     const song = songInput.value.trim();
-    if (song.length < 2) return status(songStatus, "Type a song name first.", "error");
-    const submit = songForm.querySelector("button[type=submit]");
-    submit.disabled = true;
-    const { error } = await supa.rpc("add_wedding_song", {
-      p_song: song,
-      // Keep the existing Supabase function compatible without asking visitors for a name.
-      p_added_by: "Guest",
-      p_code: code()
-    });
-    submit.disabled = false;
-    if (error) return status(songStatus, error.message, "error");
-    songForm.reset();
-    status(songStatus, "Song added.", "success");
-    loadSongs();
+    if (song.length < 2) return setStatus(songStatus, "Type a song name first.", "error");
+    const submit = songForm.querySelector("button[type=submit]"); submit.disabled = true;
+    const { error } = await supa.rpc("add_wedding_song", { p_song: song, p_code: code() }); submit.disabled = false;
+    if (error) return setStatus(songStatus, error.message, "error");
+    songForm.reset(); setStatus(songStatus, "Song added.", "success"); loadSongs();
   });
 
-  async function syncAdmin() {
-    if (!ready) return;
+  async function syncOwnerLogin() {
+    if (!ready) return setStatus(adminStatus, "Connect Supabase first.");
     const { data } = await supa.auth.getSession();
-    adminMode = Boolean(data.session);
-    adminLogout?.classList.toggle("hidden", !adminMode);
-    if (adminMode) status(adminStatus, "Owner mode is on. Delete controls are visible.", "success");
-    loadTodos();
-    loadSongs();
+    if (!data.session) {
+      adminForm?.classList.remove("hidden"); ownerOpen?.classList.add("hidden"); adminLogout?.classList.add("hidden");
+      return;
+    }
+    const { data: isOwner, error } = await supa.rpc("is_birthday_owner");
+    if (!error && isOwner === true) {
+      adminForm?.classList.add("hidden"); ownerOpen?.classList.remove("hidden"); adminLogout?.classList.remove("hidden");
+      setStatus(adminStatus, "Owner signed in.", "success");
+    } else {
+      await supa.auth.signOut();
+      adminForm?.classList.remove("hidden"); ownerOpen?.classList.add("hidden"); adminLogout?.classList.add("hidden");
+      setStatus(adminStatus, "This account is not registered as the owner.", "error");
+    }
   }
 
   adminForm?.addEventListener("submit", async event => {
     event.preventDefault();
-    if (!ready) return status(adminStatus, "Connect Supabase first.", "error");
+    if (!ready) return setStatus(adminStatus, "Connect Supabase first.", "error");
     const email = document.getElementById("adminEmail").value.trim();
     const password = document.getElementById("adminPassword").value;
     const { error } = await supa.auth.signInWithPassword({ email, password });
-    if (error) return status(adminStatus, "Owner login failed.", "error");
-    adminForm.reset();
-    syncAdmin();
+    if (error) return setStatus(adminStatus, "Owner login failed.", "error");
+    await syncOwnerLogin();
+    const { data: isOwner } = await supa.rpc("is_birthday_owner");
+    if (isOwner === true) window.location.href = "owner.html";
   });
+  ownerOpen?.addEventListener("click", () => window.location.href = "owner.html");
+  adminLogout?.addEventListener("click", async () => { await supa.auth.signOut(); setStatus(adminStatus, "Signed out."); syncOwnerLogin(); });
 
-  adminLogout?.addEventListener("click", async () => {
-    if (!ready) return;
-    await supa.auth.signOut();
-    adminMode = false;
-    status(adminStatus, "Owner mode is off.");
-    syncAdmin();
-  });
-
-  function loadAll() {
-    loadTodos();
-    loadSongs();
+  function loadAll() { loadTodos(); loadSongs(); }
+  function startSharedRefresh() {
+    if (!ready || refreshTimer) return;
+    refreshTimer = setInterval(() => {
+      if (document.visibilityState === "visible" && sessionStorage.getItem("birthdayUnlocked") === "yes") loadAll();
+    }, 8000);
   }
-
-  window.addEventListener("birthday:unlocked", loadAll);
-  if (sessionStorage.getItem("birthdayUnlocked") === "yes") loadAll();
-  if (ready) {
-    supa.auth.onAuthStateChange(() => syncAdmin());
-    syncAdmin();
-  }
+  window.addEventListener("birthday:unlocked", () => { loadAll(); startSharedRefresh(); });
+  if (sessionStorage.getItem("birthdayUnlocked") === "yes") { loadAll(); startSharedRefresh(); }
+  if (ready) { supa.auth.onAuthStateChange(() => syncOwnerLogin()); syncOwnerLogin(); }
 })();

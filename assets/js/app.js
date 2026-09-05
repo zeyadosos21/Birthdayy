@@ -1,34 +1,24 @@
 (() => {
   const cfg = window.BIRTHDAY_CONFIG || {};
   const supabaseReady = Boolean(
-    cfg.supabaseUrl &&
-    !cfg.supabaseUrl.startsWith("PASTE_") &&
-    cfg.supabaseAnonKey &&
-    !cfg.supabaseAnonKey.startsWith("PASTE_") &&
+    cfg.supabaseUrl && !cfg.supabaseUrl.startsWith("PASTE_") &&
+    cfg.supabasePublishableKey && !cfg.supabasePublishableKey.startsWith("PASTE_") &&
     window.supabase
   );
 
   window.BIRTHDAY_SUPABASE_READY = supabaseReady;
   window.birthdaySupabase = supabaseReady
-    ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey)
+    ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabasePublishableKey)
     : null;
 
   const page = document.body.dataset.page || "home";
-
-  // PASSWORD GATE:
-  // The lock screen is the only entrance. If somebody tries to open
-  // Gallery / Memories / Notes directly before unlocking, send them home.
-  if (page !== "home" && sessionStorage.getItem("birthdayUnlocked") !== "yes") {
-    window.location.replace("index.html");
-    return;
-  }
-  document.querySelectorAll(`[data-nav="${page}"]`).forEach(link => link.classList.add("active"));
-
   const gate = document.getElementById("passwordGate");
   const app = document.getElementById("siteApp");
   const digits = [...document.querySelectorAll(".pin-digit")];
   const button = document.getElementById("unlockBtn");
   const status = document.getElementById("gateStatus");
+
+  document.querySelectorAll(`[data-nav="${page}"]`).forEach(link => link.classList.add("active"));
 
   const sha256 = async value => {
     const bytes = new TextEncoder().encode(value);
@@ -45,13 +35,15 @@
     return (await sha256(code)) === cfg.fallbackPasswordHash;
   }
 
-  function currentPin() {
-    return digits.map(input => input.value).join("");
-  }
-
+  function currentPin() { return digits.map(input => input.value).join(""); }
   function clearPin() {
     digits.forEach(input => { input.value = ""; });
     digits[0]?.focus();
+  }
+
+  function clearUnlock() {
+    sessionStorage.removeItem("birthdayUnlocked");
+    sessionStorage.removeItem("birthdayCode");
   }
 
   function showSite(code) {
@@ -72,7 +64,6 @@
 
     button.disabled = true;
     if (status) status.textContent = "";
-
     try {
       if (!(await verifyCode(code))) {
         gate?.querySelector(".lock-card")?.classList.add("shake");
@@ -96,36 +87,62 @@
       if (input.value && index < digits.length - 1) digits[index + 1].focus();
       if (currentPin().length === 4) button?.focus();
     });
-
     input.addEventListener("keydown", event => {
       if (event.key === "Backspace" && !input.value && index > 0) digits[index - 1].focus();
       if (event.key === "ArrowLeft" && index > 0) digits[index - 1].focus();
       if (event.key === "ArrowRight" && index < digits.length - 1) digits[index + 1].focus();
       if (event.key === "Enter") unlock();
     });
-
     input.addEventListener("paste", event => {
       event.preventDefault();
       const pasted = (event.clipboardData?.getData("text") || "").replace(/\D/g, "").slice(0, 4);
-      if (!pasted) return;
       pasted.split("").forEach((char, i) => { if (digits[i]) digits[i].value = char; });
       digits[Math.min(pasted.length, 4) - 1]?.focus();
     });
   });
-
   button?.addEventListener("click", unlock);
 
-  if (sessionStorage.getItem("birthdayUnlocked") === "yes") {
-    gate?.classList.add("hidden");
-    app?.classList.remove("hidden");
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("birthday:unlocked", {
-        detail: { code: sessionStorage.getItem("birthdayCode") || "" }
-      }));
-    }, 0);
-  } else {
-    setTimeout(() => digits[0]?.focus(), 100);
+  async function restoreSession() {
+    const unlocked = sessionStorage.getItem("birthdayUnlocked") === "yes";
+    const savedCode = sessionStorage.getItem("birthdayCode") || "";
+
+    if (!unlocked || savedCode.length !== 4) {
+      if (page !== "home") {
+        window.location.replace("index.html");
+        return;
+      }
+      gate?.classList.remove("hidden");
+      app?.classList.add("hidden");
+      setTimeout(() => digits[0]?.focus(), 100);
+      return;
+    }
+
+    // When Supabase is connected, re-check the saved PIN on every page load.
+    // This makes a PIN changed from Owner Dashboard take effect on old sessions.
+    if (supabaseReady) {
+      try {
+        const valid = await verifyCode(savedCode);
+        if (!valid) {
+          clearUnlock();
+          if (page !== "home") return window.location.replace("index.html");
+          gate?.classList.remove("hidden");
+          app?.classList.add("hidden");
+          if (status) status.textContent = "The site password changed. Enter the new code.";
+          return;
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    showSite(savedCode);
   }
 
   window.birthdayGetCode = () => sessionStorage.getItem("birthdayCode") || "";
+  window.birthdayLockSite = () => {
+    clearUnlock();
+    window.location.href = "index.html";
+  };
+
+  restoreSession();
 })();

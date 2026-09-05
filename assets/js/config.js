@@ -1,61 +1,53 @@
 /*
   ============================================================
-  MALOOKKYYY BIRTHDAY SITE — EASY EDIT AREA
+  MALOOKKYYY BIRTHDAY SITE — EASY EDIT / FALLBACK AREA
   ============================================================
 
-  You should only need to edit this file when adding photos,
-  videos, captions, or changing the Memories text.
+  After Supabase is connected, the OWNER DASHBOARD becomes the
+  normal way to add/remove media, categories, memories and change
+  the site PIN. You will NOT need to edit code for normal updates.
 
-  1) Copy your files into the /media folder.
-  2) Add one line for each file inside `media` below.
-  3) Keep category EXACTLY one of:
-       "21/6", "22/7", "Gym", "In Cairoo"
+  If you ever want to test the site BEFORE Supabase is connected,
+  you can still add local files below.
 
-  "All Memories" is created automatically and mixes everything.
+  ------------------------------------------------------------
+  ADD YOUR PHOTOS / VIDEOS MANUALLY (OPTIONAL FALLBACK)
+  ------------------------------------------------------------
+  1) Put the file inside /media
+  2) Add a line inside `media` below
+
+  Example photo:
+    { type: "image", src: "media/photo-01.jpg", category: "21/6", caption: "Our day" }
+
+  Example video:
+    { type: "video", src: "media/video-01.mp4", category: "In Cairoo", caption: "Cairo night" }
 */
-
 window.BIRTHDAY_CONFIG = {
   name: "Malookkyyy",
 
-  // This hash lets the static site verify the private 4-digit code even
-  // before Supabase is connected. Keep the plain code out of the repo.
+  // SHA-256 of the starting guest PIN: 2912.
+  // Once Supabase is connected, the database PIN is used instead.
   fallbackPasswordHash: "5c9a7f508de2f1ec87076e88a888f9af847c69d68565ab6a6983fc8b497fa1f8",
 
-  // ----------------------------------------------------------
-  // SUPABASE — needed only for shared To Do List / Wedding Songs
-  // ----------------------------------------------------------
-  // The website can still live on the SAME GitHub Pages URL.
-  // Paste your values here after following SETUP.md.
-  supabaseUrl: "PASTE_SUPABASE_PROJECT_URL_HERE",
-  supabaseAnonKey: "PASTE_SUPABASE_ANON_KEY_HERE",
+  // ==========================================================
+  // SUPABASE CONNECTION — paste these after creating the project
+  // ==========================================================
+  supabaseUrl: "https://pzmpnuabucmjeagtqrer.supabase.co",
+  supabasePublishableKey: "sb_publishable_Ne2v3sqJIR9OBSd_1VjtAg_rQgUI4Lf",
+
+  // OPTIONAL LOCAL FALLBACK CATEGORIES
+  fallbackCategories: ["21/6", "22/7", "Gym", "In Cairoo"],
 
   // ==========================================================
-  // ADD YOUR PHOTOS + VIDEOS HERE
+  // ADD YOUR PHOTOS + VIDEOS HERE (OPTIONAL FALLBACK ONLY)
   // ==========================================================
   media: [
-    // ---------- 21/6 ----------
     // { type: "image", src: "media/21-6-photo-01.jpg", category: "21/6", caption: "Our day" },
     // { type: "video", src: "media/21-6-video-01.mp4", category: "21/6", caption: "A little moment" },
-
-    // ---------- 22/7 ----------
-    // { type: "image", src: "media/22-7-photo-01.jpg", category: "22/7", caption: "Another favorite" },
-    // { type: "video", src: "media/22-7-video-01.mp4", category: "22/7", caption: "22/7" },
-
-    // ---------- GYM ----------
-    // { type: "image", src: "media/gym-photo-01.jpg", category: "Gym", caption: "Gym" },
-    // { type: "video", src: "media/gym-video-01.mp4", category: "Gym", caption: "Growing stronger together" },
-
-    // ---------- IN CAIROO ----------
     // { type: "image", src: "media/cairo-photo-01.jpg", category: "In Cairoo", caption: "Cairoo" },
-    // { type: "video", src: "media/cairo-video-01.mp4", category: "In Cairoo", caption: "A Cairo night" },
-
-    // OPTIONAL VIDEO POSTER EXAMPLE:
-    // { type: "video", src: "media/video.mp4", poster: "media/video-cover.jpg", category: "21/6", caption: "Memory" },
   ],
 
-  // ==========================================================
-  // MEMORIES TIMELINE — EDIT THE TEXT HERE ANY TIME
-  // ==========================================================
+  // OPTIONAL LOCAL FALLBACK MEMORIES
   memories: [
     { title: "21/6", text: "The beginning of a favorite chapter." },
     { title: "22/7", text: "Another sweet memory to keep." },
