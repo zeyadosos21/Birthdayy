@@ -152,7 +152,7 @@
     const file=document.getElementById("mediaFile").files[0], categoryId=Number(document.getElementById("mediaCategory").value), caption=document.getElementById("mediaCaption").value.trim();
     const st=document.getElementById("mediaUploadStatus"); if(!file)return status(st,"Choose a file.","error");
     const type=file.type.startsWith("video/")?"video":file.type.startsWith("image/")?"image":""; if(!type)return status(st,"Use an image or video file.","error");
-    status(st,"Uploading...");
+    status(st,"Uploading\u2026");
     // ADD/UPLOAD PHOTOS + VIDEOS: this path is what gets stored in Supabase Storage.
     const path=`${Date.now()}-${crypto.randomUUID()}-${escapeName(file.name)}`;
     const up=await supa.storage.from("gallery-media").upload(path,file,{cacheControl:"3600",upsert:false,contentType:file.type});

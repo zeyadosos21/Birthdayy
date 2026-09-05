@@ -96,7 +96,7 @@
     if (item.type === "video") {
       const play = document.createElement("span");
       play.className = "video-play";
-      play.textContent = "\u25B6";
+      play.textContent = "\u25b6";
       figure.appendChild(play);
     }
     if (item.caption) {
@@ -161,7 +161,7 @@
     catch (error) {
       console.error(error);
       fallbackData();
-      if (empty) empty.innerHTML = `<h2>Couldn't load the shared gallery</h2><p>${error.message}</p>`;
+      if (empty) empty.innerHTML = `<h2>Couldn\u2019t load the shared gallery</h2><p>${error.message}</p>`;
     }
     renderSlider();
     const requested = new URLSearchParams(location.search).get("category") || "all";

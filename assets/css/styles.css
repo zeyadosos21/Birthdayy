@@ -216,7 +216,7 @@ img,video{display:block;max-width:100%}
 }
 
 /* ============================================================
-   OWNER DASHBOARD — V5
+   OWNER DASHBOARD - V5
    ============================================================ */
 .owner-body{background:#fffaf6;min-height:100vh;color:var(--ink)}
 .owner-loading{min-height:100vh;display:grid;place-items:center;color:#7d8898;font-size:14px;letter-spacing:.08em}
