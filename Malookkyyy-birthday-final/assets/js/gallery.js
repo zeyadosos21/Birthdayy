@@ -1,21 +1,31 @@
 (() => {
   const media = Array.isArray(window.BIRTHDAY_CONFIG?.media) ? window.BIRTHDAY_CONFIG.media : [];
-  const categories = ["21/6", "22/7", "Gym", "In Cairoo"];
-  const cardRoot = document.getElementById("categoryCards");
-  const browseView = document.getElementById("galleryBrowse");
-  const mediaView = document.getElementById("galleryMediaView");
+
+  // ==========================================================
+  // GALLERY CATEGORY SLIDER
+  // These are the tabs shown in the swipeable slider at the top.
+  // "All Memories" automatically combines every category below.
+  // ==========================================================
+  const categories = [
+    { label: "All Memories", value: "all" },
+    { label: "21/6", value: "21/6" },
+    { label: "22/7", value: "22/7" },
+    { label: "Gym", value: "Gym" },
+    { label: "In Cairoo", value: "In Cairoo" }
+  ];
+
+  const slider = document.getElementById("categorySlider");
   const grid = document.getElementById("galleryGrid");
   const empty = document.getElementById("galleryEmpty");
   const mediaTitle = document.getElementById("galleryMediaTitle");
   const mediaCount = document.getElementById("galleryMediaCount");
-  const back = document.getElementById("galleryBack");
+  const prev = document.getElementById("gallerySliderPrev");
+  const next = document.getElementById("gallerySliderNext");
   const lightbox = document.getElementById("lightbox");
   const lightboxContent = document.getElementById("lightboxContent");
 
   const normalize = value => String(value || "").trim().toLowerCase();
-  const countFor = category => category === "all"
-    ? media.length
-    : media.filter(item => normalize(item.category) === normalize(category)).length;
+  let activeCategory = "all";
 
   function shuffle(items) {
     const copy = [...items];
@@ -26,29 +36,12 @@
     return copy;
   }
 
-  function categoryCard(title, subtitle, category, accent) {
-    const link = document.createElement("a");
-    link.href = `gallery.html?category=${encodeURIComponent(category)}`;
-    link.className = `category-card ${accent}`;
-    link.innerHTML = `
-      <div>
-        <h2>${title}</h2>
-        <p>${subtitle}</p>
-        <span class="category-count">${countFor(category)} ${countFor(category) === 1 ? "item" : "items"}</span>
-      </div>
-      <span class="category-arrow" aria-hidden="true">›</span>
-    `;
-    return link;
-  }
-
-  function renderCards() {
-    if (!cardRoot) return;
-    cardRoot.innerHTML = "";
-    cardRoot.appendChild(categoryCard("All Memories", "A collection of everything", "all", "pink"));
-    cardRoot.appendChild(categoryCard("21/6", "A favorite chapter", "21/6", "beige"));
-    cardRoot.appendChild(categoryCard("22/7", "Another day to keep", "22/7", "pink-soft"));
-    cardRoot.appendChild(categoryCard("Gym", "Growing stronger together", "Gym", "lavender"));
-    cardRoot.appendChild(categoryCard("In Cairoo", "Our Cairo days", "In Cairoo", "sand wide"));
+  function itemsFor(category) {
+    if (normalize(category) === "all") {
+      // All Memories = photos + videos from every category, mixed together.
+      return shuffle(media);
+    }
+    return media.filter(item => normalize(item.category) === normalize(category));
   }
 
   function openLightbox(item) {
@@ -112,60 +105,76 @@
     return figure;
   }
 
-  function showCategory(category) {
-    const isAll = normalize(category) === "all";
-    let items = isAll
-      ? [...media]
-      : media.filter(item => normalize(item.category) === normalize(category));
+  function updateSliderActive() {
+    slider?.querySelectorAll(".gallery-category-pill").forEach(button => {
+      const selected = normalize(button.dataset.category) === normalize(activeCategory);
+      button.classList.toggle("active", selected);
+      button.setAttribute("aria-selected", selected ? "true" : "false");
+      if (selected) button.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    });
+  }
 
-    // User requested All Memories to mix photos/videos from every category.
-    if (isAll) items = shuffle(items);
+  function showCategory(category, updateUrl = true) {
+    const valid = categories.some(item => normalize(item.value) === normalize(category));
+    activeCategory = valid ? category : "all";
+    const items = itemsFor(activeCategory);
+    const active = categories.find(item => normalize(item.value) === normalize(activeCategory)) || categories[0];
 
-    browseView?.classList.add("hidden");
-    mediaView?.classList.remove("hidden");
-    if (mediaTitle) mediaTitle.textContent = isAll ? "All Memories" : category;
+    if (mediaTitle) mediaTitle.textContent = active.label;
     if (mediaCount) mediaCount.textContent = `${items.length} ${items.length === 1 ? "memory" : "memories"}`;
 
-    grid.innerHTML = "";
+    if (grid) grid.innerHTML = "";
     if (!items.length) {
       empty?.classList.remove("hidden");
-      grid.classList.add("hidden");
-      return;
+      grid?.classList.add("hidden");
+    } else {
+      empty?.classList.add("hidden");
+      grid?.classList.remove("hidden");
+      items.forEach(item => grid?.appendChild(makeMediaCard(item)));
     }
 
-    empty?.classList.add("hidden");
-    grid.classList.remove("hidden");
-    items.forEach(item => grid.appendChild(makeMediaCard(item)));
+    updateSliderActive();
+
+    if (updateUrl) {
+      const url = activeCategory === "all"
+        ? "gallery.html"
+        : `gallery.html?category=${encodeURIComponent(activeCategory)}`;
+      history.replaceState({}, "", url);
+    }
   }
 
-  function showBrowse() {
-    browseView?.classList.remove("hidden");
-    mediaView?.classList.add("hidden");
+  function renderSlider() {
+    if (!slider) return;
+    slider.innerHTML = "";
+    categories.forEach(category => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "gallery-category-pill";
+      button.dataset.category = category.value;
+      button.setAttribute("role", "tab");
+      button.textContent = category.label;
+      button.addEventListener("click", () => showCategory(category.value));
+      slider.appendChild(button);
+    });
   }
 
-  renderCards();
+  renderSlider();
 
-  const params = new URLSearchParams(location.search);
-  const requested = params.get("category");
-  if (requested) showCategory(requested);
-  else showBrowse();
+  const requested = new URLSearchParams(location.search).get("category") || "all";
+  showCategory(requested, false);
 
-  back?.addEventListener("click", event => {
-    event.preventDefault();
-    history.pushState({}, "", "gallery.html");
-    showBrowse();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
+  prev?.addEventListener("click", () => slider?.scrollBy({ left: -220, behavior: "smooth" }));
+  next?.addEventListener("click", () => slider?.scrollBy({ left: 220, behavior: "smooth" }));
 
   window.addEventListener("popstate", () => {
-    const cat = new URLSearchParams(location.search).get("category");
-    if (cat) showCategory(cat); else showBrowse();
+    showCategory(new URLSearchParams(location.search).get("category") || "all", false);
   });
 
   document.getElementById("lightboxClose")?.addEventListener("click", () => {
     lightbox?.classList.remove("open");
     document.body.classList.remove("no-scroll");
   });
+
   lightbox?.addEventListener("click", event => {
     if (event.target === lightbox) {
       lightbox.classList.remove("open");

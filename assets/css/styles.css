@@ -101,20 +101,18 @@ img,video{display:block;max-width:100%}
 .home-note p{font-family:"Cormorant Garamond",Georgia,serif;font-size:19px;line-height:1.6;color:#657387;margin:0}
 
 /* ---------- gallery ---------- */
-.gallery-intro{margin-bottom:48px}
-.category-list{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:720px;margin:0 auto}
-.category-card{min-height:136px;border-radius:25px;padding:26px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-soft);transition:.18s;border:1px solid rgba(74,61,56,.04)}
-.category-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
-.category-card.wide{grid-column:1/-1}
-.category-card.pink{background:#fae4e3}.category-card.pink-soft{background:#f9e9e7}.category-card.beige{background:#f6eee6}.category-card.lavender{background:#edecf6}.category-card.sand{background:#f2e8df}
-.category-card h2{font-family:"Cormorant Garamond",Georgia,serif;color:var(--navy);font-size:34px;margin:0}
-.category-card p{font-family:"Cormorant Garamond",Georgia,serif;color:#6a7686;font-size:18px;margin:3px 0 10px}
-.category-count{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#667489}
-.category-arrow{font-family:Georgia,serif;font-size:48px;font-weight:300;color:#a18462;line-height:1}
-.gallery-media-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:28px}
-.gallery-back{border:0;background:none;color:#758097;padding:8px 0;font-weight:600}
-.gallery-media-head h1{font-family:"Cormorant Garamond",Georgia,serif;color:var(--navy);font-size:clamp(48px,9vw,68px);line-height:1;margin:0}
-.gallery-media-head p{margin:8px 0 0;color:#8a91a0;font-size:12px;letter-spacing:.15em;text-transform:uppercase}
+.gallery-intro{margin-bottom:30px}
+.gallery-slider-wrap{position:relative;display:grid;grid-template-columns:40px minmax(0,1fr) 40px;gap:8px;align-items:center;margin:0 auto 34px;max-width:760px}
+.gallery-slider{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;scrollbar-width:none;-ms-overflow-style:none;padding:5px 2px 8px;scroll-behavior:smooth}
+.gallery-slider::-webkit-scrollbar{display:none}
+.gallery-category-pill{flex:0 0 auto;scroll-snap-align:center;border:1px solid rgba(49,70,95,.08);border-radius:999px;background:#f6efe9;color:var(--navy);padding:12px 22px;font-family:"Cormorant Garamond",Georgia,serif;font-size:19px;font-weight:700;line-height:1;white-space:nowrap;box-shadow:0 5px 16px rgba(79,54,46,.035);transition:background .18s,color .18s,transform .18s,box-shadow .18s}
+.gallery-category-pill:nth-child(2){background:#f7efe7}.gallery-category-pill:nth-child(3){background:#fae8e7}.gallery-category-pill:nth-child(4){background:#efeff8}.gallery-category-pill:nth-child(5){background:#f4ebe3}
+.gallery-category-pill:hover{transform:translateY(-1px)}
+.gallery-category-pill.active{background:var(--pink);color:#7b3440;border-color:transparent;box-shadow:0 8px 20px rgba(207,120,129,.17)}
+.gallery-slider-arrow{width:38px;height:38px;border:1px solid rgba(49,70,95,.08);border-radius:50%;background:rgba(255,255,255,.78);color:#a27d54;font-family:Georgia,serif;font-size:28px;line-height:1;display:grid;place-items:center;box-shadow:var(--shadow-soft)}
+.gallery-active-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:0 2px 20px;padding-bottom:13px;border-bottom:1px solid var(--line)}
+.gallery-active-head h2{font-family:"Cormorant Garamond",Georgia,serif;color:var(--navy);font-size:clamp(34px,7vw,48px);line-height:1;margin:0}
+.gallery-active-head p{margin:0 0 4px;color:#8a91a0;font-size:10px;letter-spacing:.15em;text-transform:uppercase;white-space:nowrap}
 .gallery-grid{columns:2 240px;column-gap:14px}
 .memory-media{break-inside:avoid;margin:0 0 14px;border-radius:20px;overflow:hidden;background:#fff;box-shadow:var(--shadow-soft);cursor:pointer;position:relative}
 .memory-media img,.memory-media video{width:100%;height:auto;max-height:620px;object-fit:cover;background:#f2ece8}
@@ -176,8 +174,14 @@ img,video{display:block;max-width:100%}
   .lock-card{padding:43px 22px 36px;border-radius:29px}
   .pin-row{gap:9px}.pin-digit{width:55px;height:66px}
   .home-links{gap:12px}.home-link-card{padding:22px;min-height:170px}.home-link-card h2{font-size:30px}.home-link-card p{font-size:18px}
-  .category-list{grid-template-columns:1fr}.category-card.wide{grid-column:auto}.category-card{min-height:118px;padding:22px}
-  .gallery-media-head{align-items:flex-start;flex-direction:column}.gallery-grid{columns:2 145px;column-gap:10px}.memory-media{margin-bottom:10px;border-radius:15px}.memory-media figcaption{font-size:15px;padding:9px 10px}
+  .gallery-intro{margin-bottom:25px}
+  .gallery-slider-wrap{display:block;margin-left:-14px;margin-right:-14px;margin-bottom:27px}
+  .gallery-slider{padding:4px 14px 9px;gap:8px}
+  .gallery-slider-arrow{display:none}
+  .gallery-category-pill{font-size:17px;padding:11px 18px}
+  .gallery-active-head{margin-bottom:14px}
+  .gallery-active-head h2{font-size:36px}
+  .gallery-grid{columns:2 145px;column-gap:10px}.memory-media{margin-bottom:10px;border-radius:15px}.memory-media figcaption{font-size:15px;padding:9px 10px}
   .timeline-item{min-height:175px}.timeline-copy{max-width:calc(100% - 30px);padding:21px 18px}.timeline-item.left .timeline-copy{margin-right:30px}.timeline-item.right .timeline-copy{margin-left:30px}.timeline-copy h2{font-size:36px}.timeline-copy p{font-size:18px}
   .shared-form.two-fields{grid-template-columns:1fr auto}.shared-form.two-fields #songName{grid-column:1/-1}.owner-form{grid-template-columns:1fr}.owner-button{width:100%}
   .bottom-nav{bottom:8px;width:calc(100% - 16px);border-radius:25px}.nav-link{font-size:15px;min-height:62px}

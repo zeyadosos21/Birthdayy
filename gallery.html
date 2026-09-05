@@ -19,12 +19,19 @@
     <main class="page page-narrow">
       <section id="galleryBrowse">
         <div class="gallery-intro"><p class="kicker">Good memories live forever</p><h1 class="page-title">Our Memories</h1><p class="page-subtitle">A collection of our favorite moments together.</p></div>
-        <div id="categoryCards" class="category-list"></div>
-      </section>
 
-      <section id="galleryMediaView" class="hidden">
-        <button id="galleryBack" class="gallery-back" type="button">← Back to Gallery</button>
-        <div class="gallery-media-head"><div><h1 id="galleryMediaTitle">All Memories</h1><p id="galleryMediaCount"></p></div></div>
+        <!-- Swipe this slider left/right to move between gallery categories. -->
+        <div class="gallery-slider-wrap" aria-label="Gallery categories">
+          <button id="gallerySliderPrev" class="gallery-slider-arrow prev" type="button" aria-label="Previous categories">‹</button>
+          <div id="categorySlider" class="gallery-slider"></div>
+          <button id="gallerySliderNext" class="gallery-slider-arrow next" type="button" aria-label="Next categories">›</button>
+        </div>
+
+        <div class="gallery-active-head">
+          <h2 id="galleryMediaTitle">All Memories</h2>
+          <p id="galleryMediaCount"></p>
+        </div>
+
         <div id="galleryEmpty" class="gallery-empty hidden"><h2>No memories here yet</h2><p>Add them in <strong>assets/js/config.js</strong> after copying your files into <strong>/media</strong>.</p></div>
         <div id="galleryGrid" class="gallery-grid"></div>
       </section>
