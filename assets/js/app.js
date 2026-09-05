@@ -75,7 +75,7 @@
       showSite(code);
     } catch (error) {
       console.error(error);
-      if (status) status.textContent = "Couldn’t verify the code right now.";
+      if (status) status.textContent = "Couldn't verify the code right now.";
     } finally {
       button.disabled = false;
     }

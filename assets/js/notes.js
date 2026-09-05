@@ -41,7 +41,7 @@
     const check = document.createElement("button");
     check.type = "button";
     check.className = "todo-check";
-    check.innerHTML = todo.completed ? "✓" : "";
+    check.innerHTML = todo.completed ? "\u2713" : "";
     check.addEventListener("click", async () => {
       if (!ready) return;
       check.disabled = true;

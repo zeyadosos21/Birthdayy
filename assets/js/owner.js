@@ -105,8 +105,8 @@
       const actions = document.createElement("div"); actions.className = "owner-row-actions";
       actions.append(
         actionButton("Save", async () => { const name=input.value.trim(); if(!name)return; await supa.from("gallery_categories").update({name}).eq("id",c.id); await refreshAll(); }),
-        actionButton("↑", () => moveCategory(index,-1)),
-        actionButton("↓", () => moveCategory(index,1)),
+        actionButton("\u2191", () => moveCategory(index,-1)),
+        actionButton("\u2193", () => moveCategory(index,1)),
         actionButton("Delete", async () => { if(!confirm(`Delete ${c.name}? Media in it must be moved/deleted first.`))return; const {error}=await supa.from("gallery_categories").delete().eq("id",c.id); if(error)return alert(error.message); await refreshAll(); }, "danger")
       );
       row.append(input, actions); list.appendChild(row);
@@ -139,7 +139,7 @@
       const actions=document.createElement("div"); actions.className="owner-row-actions";
       actions.append(
         actionButton("Save",async()=>{await supa.from("gallery_media").update({caption:caption.value.trim(),category_id:Number(select.value)}).eq("id",m.id);await refreshAll();}),
-        actionButton("↑",()=>moveMedia(index,-1)), actionButton("↓",()=>moveMedia(index,1)),
+        actionButton("\u2191",()=>moveMedia(index,-1)), actionButton("\u2193",()=>moveMedia(index,1)),
         actionButton("Delete",async()=>{if(!confirm("Delete this media?"))return; const {data,error}=await supa.rpc("delete_gallery_media_admin",{p_media_id:m.id}); if(error)return alert(error.message); if(data) await supa.storage.from("gallery-media").remove([data]); await refreshAll();},"danger")
       );
       row.append(preview,fields,actions); list.appendChild(row);
@@ -152,7 +152,7 @@
     const file=document.getElementById("mediaFile").files[0], categoryId=Number(document.getElementById("mediaCategory").value), caption=document.getElementById("mediaCaption").value.trim();
     const st=document.getElementById("mediaUploadStatus"); if(!file)return status(st,"Choose a file.","error");
     const type=file.type.startsWith("video/")?"video":file.type.startsWith("image/")?"image":""; if(!type)return status(st,"Use an image or video file.","error");
-    status(st,"Uploading…");
+    status(st,"Uploading...");
     // ADD/UPLOAD PHOTOS + VIDEOS: this path is what gets stored in Supabase Storage.
     const path=`${Date.now()}-${crypto.randomUUID()}-${escapeName(file.name)}`;
     const up=await supa.storage.from("gallery-media").upload(path,file,{cacheControl:"3600",upsert:false,contentType:file.type});
@@ -163,7 +163,7 @@
     event.target.reset(); status(st,"Uploaded.","success"); await refreshAll();
   });
 
-  function renderMemories(){const list=document.getElementById("ownerMemoryList");if(!list)return;list.innerHTML="";memories.forEach((m,index)=>{const row=document.createElement("div");row.className="owner-list-row owner-memory-row";const fields=document.createElement("div");fields.className="owner-memory-fields";const title=document.createElement("input");title.className="owner-edit-input";title.value=m.title;const body=document.createElement("textarea");body.className="owner-edit-input owner-textarea";body.value=m.body;fields.append(title,body);const actions=document.createElement("div");actions.className="owner-row-actions";actions.append(actionButton("Save",async()=>{await supa.from("memories").update({title:title.value.trim(),body:body.value.trim()}).eq("id",m.id);await refreshAll();}),actionButton("↑",()=>moveMemory(index,-1)),actionButton("↓",()=>moveMemory(index,1)),actionButton("Delete",async()=>{if(!confirm("Delete this memory?"))return;await supa.from("memories").delete().eq("id",m.id);await refreshAll();},"danger"));row.append(fields,actions);list.appendChild(row);});if(!memories.length)list.innerHTML=`<div class="owner-empty">No memories yet.</div>`;}
+  function renderMemories(){const list=document.getElementById("ownerMemoryList");if(!list)return;list.innerHTML="";memories.forEach((m,index)=>{const row=document.createElement("div");row.className="owner-list-row owner-memory-row";const fields=document.createElement("div");fields.className="owner-memory-fields";const title=document.createElement("input");title.className="owner-edit-input";title.value=m.title;const body=document.createElement("textarea");body.className="owner-edit-input owner-textarea";body.value=m.body;fields.append(title,body);const actions=document.createElement("div");actions.className="owner-row-actions";actions.append(actionButton("Save",async()=>{await supa.from("memories").update({title:title.value.trim(),body:body.value.trim()}).eq("id",m.id);await refreshAll();}),actionButton("\u2191",()=>moveMemory(index,-1)),actionButton("\u2193",()=>moveMemory(index,1)),actionButton("Delete",async()=>{if(!confirm("Delete this memory?"))return;await supa.from("memories").delete().eq("id",m.id);await refreshAll();},"danger"));row.append(fields,actions);list.appendChild(row);});if(!memories.length)list.innerHTML=`<div class="owner-empty">No memories yet.</div>`;}
   async function moveMemory(index,delta){const j=index+delta;if(j<0||j>=memories.length)return;const a=memories[index],b=memories[j];await Promise.all([supa.from("memories").update({sort_order:b.sort_order}).eq("id",a.id),supa.from("memories").update({sort_order:a.sort_order}).eq("id",b.id)]);await refreshAll();}
   document.getElementById("memoryAddForm")?.addEventListener("submit",async event=>{event.preventDefault();const title=document.getElementById("memoryTitle").value.trim(),body=document.getElementById("memoryBody").value.trim();const max=Math.max(0,...memories.map(m=>m.sort_order||0));const {error}=await supa.from("memories").insert({title,body,sort_order:max+10});if(error)return status(document.getElementById("memoryStatus"),error.message,"error");event.target.reset();await refreshAll();});
 
