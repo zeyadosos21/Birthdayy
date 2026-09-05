@@ -6,6 +6,10 @@
   const ready = window.BIRTHDAY_SUPABASE_READY;
   const code = () => window.birthdayGetCode?.() || "";
   let loaded = false;
+  const withTimeout = (promise, ms = 8000) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Connection timeout")), ms))
+  ]);
 
   function render(memories) {
     root.innerHTML = "";
@@ -24,7 +28,7 @@
     if (loaded && !force) return;
     loaded = true;
     if (!ready) return render(Array.isArray(cfg.memories) ? cfg.memories : []);
-    const { data, error } = await supa.rpc("get_memories", { p_code: code() });
+    const { data, error } = await withTimeout(supa.rpc("get_memories", { p_code: code() }));
     if (error) {
       console.error(error);
       return render(Array.isArray(cfg.memories) ? cfg.memories : []);

@@ -13,6 +13,10 @@
   const panels = [...document.querySelectorAll("[data-owner-panel]")];
 
   let categories = [], media = [], memories = [], todos = [], songs = [];
+  const withTimeout = (promise, ms = 10000) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Connection timeout")), ms))
+  ]);
 
   const status = (el, text, type = "") => { if (el) { el.textContent = text; el.className = `form-status${type ? ` ${type}` : ""}`; } };
   const escapeName = name => name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "file";
@@ -24,9 +28,9 @@
   tabs.forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.ownerTab)));
 
   async function isOwner() {
-    const { data: sessionData } = await supa.auth.getSession();
+    const { data: sessionData } = await withTimeout(supa.auth.getSession());
     if (!sessionData.session) return false;
-    const { data, error } = await supa.rpc("is_birthday_owner");
+    const { data, error } = await withTimeout(supa.rpc("is_birthday_owner"));
     return !error && data === true;
   }
 
@@ -38,11 +42,18 @@
       loginStatus.textContent = "Connect Supabase in assets/js/config.js first.";
       return;
     }
-    if (await isOwner()) {
-      loading.classList.add("hidden"); loginScreen.classList.add("hidden"); dashboard.classList.remove("hidden");
-      await refreshAll();
-    } else {
-      loading.classList.add("hidden"); dashboard.classList.add("hidden"); loginScreen.classList.remove("hidden");
+    try {
+      if (await isOwner()) {
+        loading.classList.add("hidden"); loginScreen.classList.add("hidden"); dashboard.classList.remove("hidden");
+        await refreshAll();
+      } else {
+        loading.classList.add("hidden"); dashboard.classList.add("hidden"); loginScreen.classList.remove("hidden");
+      }
+    } catch (error) {
+      loading.classList.add("hidden");
+      dashboard.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
+      status(loginStatus, "Connection is slow. Try again.", "error");
     }
   }
 
@@ -177,7 +188,10 @@
     event.preventDefault(); const a=document.getElementById("newPin").value.trim(),b=document.getElementById("confirmPin").value.trim(),st=document.getElementById("pinStatus");
     if(!/^\d{4}$/.test(a))return status(st,"PIN must be exactly 4 digits.","error"); if(a!==b)return status(st,"PINs do not match.","error");
     const {error}=await supa.rpc("owner_set_site_code",{p_code:a}); if(error)return status(st,error.message,"error");
-    status(st,"Site PIN changed. Visitors must use the new code.","success"); event.target.reset();
+    status(st,"Site PIN changed. Re-enter the new PIN on the site.","success");
+    event.target.reset();
+    sessionStorage.removeItem("birthdayUnlocked");
+    sessionStorage.removeItem("birthdayCode");
   });
 
   guard();

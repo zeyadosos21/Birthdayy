@@ -5,13 +5,23 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#fffaf6">
+  <script>
+    try {
+      const ok = sessionStorage.getItem("birthdayUnlocked") === "yes";
+      const code = sessionStorage.getItem("birthdayCode") || "";
+      if (ok && /^[0-9]{4}$/.test(code)) {
+        document.documentElement.classList.add("session-unlocked");
+      }
+    } catch (e) {}
+  </script>
   <title>For Malookkyyy</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="assets/js/config.js"></script>
+  <script defer src="assets/js/app.js"></script>
 </head>
 <body data-page="home">
   <div id="passwordGate" class="password-gate">
@@ -37,7 +47,7 @@
     <main class="page home-page">
       <section class="home-hero">
         <p class="kicker">Good memories live forever</p>
-        <h1 class="home-heading">Here&#8217;s to<em>all our moments</em></h1>
+        <h1 class="home-heading">Here's to<em>all our moments</em></h1>
         <p class="home-subtitle">Different places, same people, brighter days.</p>
       </section>
 
@@ -79,7 +89,5 @@
       </div>
     </nav>
   </div>
-
-  <script src="assets/js/app.js"></script>
 </body>
 </html>

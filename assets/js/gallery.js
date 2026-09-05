@@ -19,6 +19,10 @@
   let activeCategory = "all";
   let loaded = false;
   const normalize = value => String(value ?? "").trim().toLowerCase();
+  const withTimeout = (promise, ms = 9000) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Connection timeout")), ms))
+  ]);
 
   function shuffle(items) {
     const copy = [...items];
@@ -44,10 +48,10 @@
 
   async function loadBackendData() {
     if (!ready) return fallbackData();
-    const [categoryResult, mediaResult] = await Promise.all([
+    const [categoryResult, mediaResult] = await withTimeout(Promise.all([
       supa.rpc("get_gallery_categories", { p_code: code() }),
       supa.rpc("get_gallery_media", { p_code: code() })
-    ]);
+    ]));
     if (categoryResult.error) throw categoryResult.error;
     if (mediaResult.error) throw mediaResult.error;
 

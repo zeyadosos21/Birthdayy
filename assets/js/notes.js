@@ -18,6 +18,12 @@
   const adminLogout = document.getElementById("adminLogout");
   const ownerOpen = document.getElementById("ownerOpen");
   let refreshTimer = null;
+  let todosLoading = false;
+  let songsLoading = false;
+  const withTimeout = (promise, ms = 8000) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Connection timeout")), ms))
+  ]);
 
   function setStatus(el, text, type = "") {
     if (!el) return;
@@ -63,22 +69,36 @@
   }
 
   async function loadTodos() {
-    if (!todoList) return;
+    if (!todoList || todosLoading) return;
     if (!ready) return backendMessage("todo");
-    const { data, error } = await supa.rpc("get_todos", { p_code: code() });
-    if (error) return todoList.innerHTML = `<div class="shared-empty error"><p>${error.message}</p></div>`;
-    todoList.innerHTML = "";
-    if (!data?.length) return todoList.innerHTML = `<div class="shared-empty"><p>No to-dos yet. Add the first one.</p></div>`;
-    data.forEach(todo => todoList.appendChild(todoRow(todo)));
+    todosLoading = true;
+    try {
+      const { data, error } = await withTimeout(supa.rpc("get_todos", { p_code: code() }));
+      if (error) return todoList.innerHTML = `<div class="shared-empty error"><p>${error.message}</p></div>`;
+      todoList.innerHTML = "";
+      if (!data?.length) return todoList.innerHTML = `<div class="shared-empty"><p>No to-dos yet. Add the first one.</p></div>`;
+      data.forEach(todo => todoList.appendChild(todoRow(todo)));
+    } catch (error) {
+      todoList.innerHTML = `<div class="shared-empty error"><p>Connection is slow. Try again.</p></div>`;
+    } finally {
+      todosLoading = false;
+    }
   }
   async function loadSongs() {
-    if (!songList) return;
+    if (!songList || songsLoading) return;
     if (!ready) return backendMessage("song");
-    const { data, error } = await supa.rpc("get_wedding_songs", { p_code: code() });
-    if (error) return songList.innerHTML = `<div class="shared-empty error"><p>${error.message}</p></div>`;
-    songList.innerHTML = "";
-    if (!data?.length) return songList.innerHTML = `<div class="shared-empty"><p>No songs yet. Add the first suggestion.</p></div>`;
-    data.forEach(song => songList.appendChild(songRow(song)));
+    songsLoading = true;
+    try {
+      const { data, error } = await withTimeout(supa.rpc("get_wedding_songs", { p_code: code() }));
+      if (error) return songList.innerHTML = `<div class="shared-empty error"><p>${error.message}</p></div>`;
+      songList.innerHTML = "";
+      if (!data?.length) return songList.innerHTML = `<div class="shared-empty"><p>No songs yet. Add the first suggestion.</p></div>`;
+      data.forEach(song => songList.appendChild(songRow(song)));
+    } catch (error) {
+      songList.innerHTML = `<div class="shared-empty error"><p>Connection is slow. Try again.</p></div>`;
+    } finally {
+      songsLoading = false;
+    }
   }
 
   todoForm?.addEventListener("submit", async event => {
