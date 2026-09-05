@@ -14,6 +14,14 @@
     : null;
 
   const page = document.body.dataset.page || "home";
+
+  // PASSWORD GATE:
+  // The lock screen is the only entrance. If somebody tries to open
+  // Gallery / Memories / Notes directly before unlocking, send them home.
+  if (page !== "home" && sessionStorage.getItem("birthdayUnlocked") !== "yes") {
+    window.location.replace("index.html");
+    return;
+  }
   document.querySelectorAll(`[data-nav="${page}"]`).forEach(link => link.classList.add("active"));
 
   const gate = document.getElementById("passwordGate");
@@ -69,7 +77,7 @@
       if (!(await verifyCode(code))) {
         gate?.querySelector(".lock-card")?.classList.add("shake");
         setTimeout(() => gate?.querySelector(".lock-card")?.classList.remove("shake"), 450);
-        if (status) status.textContent = "That code is not quite right.";
+        if (status) status.textContent = "Wrong code. Access denied.";
         clearPin();
         return;
       }

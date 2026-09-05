@@ -11,7 +11,6 @@
   const todoStatus = document.getElementById("todoStatus");
   const songForm = document.getElementById("songForm");
   const songInput = document.getElementById("songInput");
-  const songName = document.getElementById("songName");
   const songList = document.getElementById("songList");
   const songStatus = document.getElementById("songStatus");
   const adminForm = document.getElementById("adminForm");
@@ -91,9 +90,7 @@
     const copy = document.createElement("div");
     const title = document.createElement("p");
     title.textContent = song.song;
-    const by = document.createElement("span");
-    by.textContent = `Added by ${song.added_by}`;
-    copy.append(title, by);
+    copy.append(title);
     row.appendChild(copy);
 
     if (adminMode) {
@@ -165,13 +162,13 @@
     event.preventDefault();
     if (!ready) return status(songStatus, "Connect Supabase first using SETUP.md.", "error");
     const song = songInput.value.trim();
-    const name = songName.value.trim();
-    if (song.length < 2 || name.length < 2) return status(songStatus, "Add the song and your name.", "error");
+    if (song.length < 2) return status(songStatus, "Type a song name first.", "error");
     const submit = songForm.querySelector("button[type=submit]");
     submit.disabled = true;
     const { error } = await supa.rpc("add_wedding_song", {
       p_song: song,
-      p_added_by: name,
+      // Keep the existing Supabase function compatible without asking visitors for a name.
+      p_added_by: "Guest",
       p_code: code()
     });
     submit.disabled = false;

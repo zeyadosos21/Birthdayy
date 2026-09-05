@@ -61,3 +61,7 @@ git add -A
 git commit -m "Build final Malookkyyy birthday site"
 git push origin main
 ```
+
+
+## Song form
+The public Wedding Songs form intentionally asks for **Song name only**. The database stores `Guest` internally only for compatibility; it is not shown on the site.
