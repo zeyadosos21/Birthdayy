@@ -12,6 +12,12 @@
   const tabs = [...document.querySelectorAll("[data-owner-tab]")];
   const panels = [...document.querySelectorAll("[data-owner-panel]")];
 
+  const ownerSidebar = document.getElementById("ownerSidebar");
+  const ownerMenuToggle = document.getElementById("ownerMenuToggle");
+  const ownerMenuClose = document.getElementById("ownerMenuClose");
+  const ownerMenuBackdrop = document.getElementById("ownerMenuBackdrop");
+  const ownerMobileSection = document.getElementById("ownerMobileSection");
+
   let categories = [], media = [], memories = [], todos = [], songs = [];
   const withTimeout = (promise, ms = 10000) => Promise.race([
     promise,
@@ -21,11 +27,34 @@
   const status = (el, text, type = "") => { if (el) { el.textContent = text; el.className = `form-status${type ? ` ${type}` : ""}`; } };
   const escapeName = name => name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "file";
 
+  function setOwnerMenu(open) {
+    ownerSidebar?.classList.toggle("menu-open", open);
+    ownerMenuBackdrop?.classList.toggle("menu-open", open);
+    document.body.classList.toggle("owner-menu-open", open);
+    ownerMenuToggle?.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
   function setTab(name) {
     tabs.forEach(btn => btn.classList.toggle("active", btn.dataset.ownerTab === name));
     panels.forEach(panel => panel.classList.toggle("hidden", panel.dataset.ownerPanel !== name));
+
+    const activeButton = tabs.find(btn => btn.dataset.ownerTab === name);
+    if (ownerMobileSection && activeButton) {
+      ownerMobileSection.textContent = activeButton.textContent.trim();
+    }
+
+    setOwnerMenu(false);
   }
+
   tabs.forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.ownerTab)));
+  ownerMenuToggle?.addEventListener("click", () => {
+    setOwnerMenu(!ownerSidebar?.classList.contains("menu-open"));
+  });
+  ownerMenuClose?.addEventListener("click", () => setOwnerMenu(false));
+  ownerMenuBackdrop?.addEventListener("click", () => setOwnerMenu(false));
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") setOwnerMenu(false);
+  });
 
   async function isOwner() {
     const { data: sessionData } = await withTimeout(supa.auth.getSession());

@@ -33,7 +33,20 @@
   </section>
 
   <div id="ownerDashboard" class="owner-dashboard hidden">
-    <aside class="owner-sidebar">
+    <header class="owner-mobile-header">
+      <div class="owner-mobile-title">
+        <span class="owner-mobile-kicker">Malookkyyy</span>
+        <strong id="ownerMobileSection">Overview</strong>
+      </div>
+      <button id="ownerMenuToggle" class="owner-hamburger" type="button" aria-label="Open owner menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </header>
+
+    <button id="ownerMenuBackdrop" class="owner-menu-backdrop" type="button" aria-label="Close owner menu" tabindex="-1"></button>
+
+    <aside id="ownerSidebar" class="owner-sidebar">
+      <button id="ownerMenuClose" class="owner-menu-close" type="button" aria-label="Close owner menu">&times;</button>
       <div>
         <p class="owner-small">Malookkyyy</p>
         <h1>Owner Dashboard</h1>
