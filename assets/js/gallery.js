@@ -71,12 +71,31 @@
     return media.filter(item => normalize(item.categoryValue) === normalize(category));
   }
 
+  function primeVideoPreview(video) {
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+
+    const seekPreview = () => {
+      const duration = Number(video.duration);
+      if (!Number.isFinite(duration) || duration <= 0) return;
+      const previewTime = Math.min(0.15, Math.max(0.03, duration * 0.05));
+      try {
+        if (Math.abs(video.currentTime - previewTime) > 0.01) {
+          video.currentTime = previewTime;
+        }
+      } catch (_) {}
+    };
+
+    video.addEventListener("loadedmetadata", seekPreview, { once: true });
+  }
+
   function openLightbox(item) {
     if (!lightbox || !lightboxContent) return;
     lightboxContent.innerHTML = "";
     const el = document.createElement(item.type === "video" ? "video" : "img");
     el.src = item.src;
-    if (item.type === "video") { el.controls = true; el.autoplay = true; el.playsInline = true; }
+    if (item.type === "video") { el.controls = true; el.autoplay = true; el.playsInline = true; el.preload = "auto"; }
     else el.alt = item.caption || "Memory";
     lightboxContent.appendChild(el);
     if (item.caption) {
@@ -94,7 +113,7 @@
     figure.className = "memory-media";
     const el = document.createElement(item.type === "video" ? "video" : "img");
     el.src = item.src;
-    if (item.type === "video") { el.preload = "metadata"; el.playsInline = true; el.muted = true; }
+    if (item.type === "video") { primeVideoPreview(el); }
     else { el.alt = item.caption || "Memory"; el.loading = "lazy"; }
     figure.appendChild(el);
     if (item.type === "video") {

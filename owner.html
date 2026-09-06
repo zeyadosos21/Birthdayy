@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="assets/css/styles.css?v=owner-menu-2">
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="assets/js/config.js"></script>
-  <script defer src="assets/js/owner.js?v=owner-menu-2"></script>
+  <script defer src="assets/js/owner.js?v=multi-upload-1"></script>
 </head>
 <body class="owner-body" data-page="owner">
   <div id="ownerLoading" class="owner-loading">Checking owner access&#8230;</div>
@@ -84,7 +84,7 @@
         <p class="owner-lead">Upload here and the public Gallery updates automatically.</p>
         <form id="mediaUploadForm" class="owner-form-card">
           <!-- OWNER MEDIA UPLOAD: choose any JPG/PNG/WEBP/GIF/MP4/WEBM/MOV file here -->
-          <input id="mediaFile" class="shared-input" type="file" accept="image/*,video/*" required>
+          <input id="mediaFile" class="shared-input" type="file" accept="image/*,video/*" multiple required>
           <select id="mediaCategory" class="shared-input" required></select>
           <input id="mediaCaption" class="shared-input" maxlength="180" placeholder="Caption (optional)">
           <button class="owner-primary" type="submit">Upload</button>

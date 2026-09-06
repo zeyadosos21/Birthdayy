@@ -167,11 +167,53 @@
     if(error)return status(document.getElementById("categoryStatus"),error.message,"error"); input.value=""; await refreshAll();
   });
 
+  function detectMediaType(file) {
+    const mime = String(file?.type || "").toLowerCase();
+    const name = String(file?.name || "").toLowerCase();
+
+    if (mime.startsWith("video/") || /\.(mp4|mov|m4v|webm|ogv)$/i.test(name)) return "video";
+    if (mime.startsWith("image/") || /\.(jpg|jpeg|png|webp|gif|bmp|heic|heif)$/i.test(name)) return "image";
+    return "";
+  }
+
+  function contentTypeFor(file, type) {
+    if (file?.type) return file.type;
+    const name = String(file?.name || "").toLowerCase();
+    if (type === "video") {
+      if (name.endsWith(".webm")) return "video/webm";
+      if (name.endsWith(".mov")) return "video/quicktime";
+      return "video/mp4";
+    }
+    if (name.endsWith(".png")) return "image/png";
+    if (name.endsWith(".webp")) return "image/webp";
+    if (name.endsWith(".gif")) return "image/gif";
+    return "image/jpeg";
+  }
+
+  function primeVideoPreview(video) {
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+
+    const seekPreview = () => {
+      const duration = Number(video.duration);
+      if (!Number.isFinite(duration) || duration <= 0) return;
+      const previewTime = Math.min(0.15, Math.max(0.03, duration * 0.05));
+      try {
+        if (Math.abs(video.currentTime - previewTime) > 0.01) {
+          video.currentTime = previewTime;
+        }
+      } catch (_) {}
+    };
+
+    video.addEventListener("loadedmetadata", seekPreview, { once: true });
+  }
+
   function renderMedia() {
     const list=document.getElementById("ownerMediaList"); if(!list)return; list.innerHTML="";
     media.forEach((m,index)=>{
       const row=document.createElement("div"); row.className="owner-media-row";
-      const preview=document.createElement(m.media_type==="video"?"video":"img"); preview.src=publicUrl(m.storage_path); if(m.media_type==="video"){preview.muted=true;preview.playsInline=true;preview.preload="metadata";}
+      const preview=document.createElement(m.media_type==="video"?"video":"img"); preview.src=publicUrl(m.storage_path); if(m.media_type==="video"){primeVideoPreview(preview);}
       const fields=document.createElement("div"); fields.className="owner-media-fields";
       const caption=document.createElement("input"); caption.className="owner-edit-input"; caption.value=m.caption||""; caption.placeholder="Caption";
       const select=document.createElement("select"); select.className="owner-edit-input"; select.innerHTML=categories.map(c=>`<option value="${c.id}" ${String(c.id)===String(m.category_id)?"selected":""}>${c.name}</option>`).join("");
@@ -187,20 +229,92 @@
     if(!media.length) list.innerHTML=`<div class="owner-empty">No photos or videos yet.</div>`;
   }
   async function moveMedia(index,delta){const j=index+delta;if(j<0||j>=media.length)return;const a=media[index],b=media[j];await Promise.all([supa.from("gallery_media").update({sort_order:b.sort_order}).eq("id",a.id),supa.from("gallery_media").update({sort_order:a.sort_order}).eq("id",b.id)]);await refreshAll();}
+  const mediaFileInput = document.getElementById("mediaFile");
+
+  mediaFileInput?.addEventListener("change", () => {
+    const count = mediaFileInput.files?.length || 0;
+    const st = document.getElementById("mediaUploadStatus");
+    if (count > 1) status(st, `${count} files selected.`);
+    else if (count === 1) status(st, "1 file selected.");
+    else status(st, "");
+  });
+
   document.getElementById("mediaUploadForm")?.addEventListener("submit", async event => {
     event.preventDefault();
-    const file=document.getElementById("mediaFile").files[0], categoryId=Number(document.getElementById("mediaCategory").value), caption=document.getElementById("mediaCaption").value.trim();
-    const st=document.getElementById("mediaUploadStatus"); if(!file)return status(st,"Choose a file.","error");
-    const type=file.type.startsWith("video/")?"video":file.type.startsWith("image/")?"image":""; if(!type)return status(st,"Use an image or video file.","error");
-    status(st,"Uploading\u2026");
-    // ADD/UPLOAD PHOTOS + VIDEOS: this path is what gets stored in Supabase Storage.
-    const path=`${Date.now()}-${crypto.randomUUID()}-${escapeName(file.name)}`;
-    const up=await supa.storage.from("gallery-media").upload(path,file,{cacheControl:"3600",upsert:false,contentType:file.type});
-    if(up.error)return status(st,up.error.message,"error");
-    const max=Math.max(0,...media.map(m=>m.sort_order||0));
-    const ins=await supa.from("gallery_media").insert({category_id:categoryId,media_type:type,storage_path:path,caption,sort_order:max+10});
-    if(ins.error){await supa.storage.from("gallery-media").remove([path]);return status(st,ins.error.message,"error");}
-    event.target.reset(); status(st,"Uploaded.","success"); await refreshAll();
+
+    const input = document.getElementById("mediaFile");
+    const files = [...(input?.files || [])];
+    const categoryId = Number(document.getElementById("mediaCategory").value);
+    const caption = document.getElementById("mediaCaption").value.trim();
+    const st = document.getElementById("mediaUploadStatus");
+    const submit = event.currentTarget.querySelector('button[type="submit"]');
+
+    if (!files.length) return status(st, "Choose at least one photo or video.", "error");
+    if (!categoryId) return status(st, "Choose a category.", "error");
+
+    const invalid = files.filter(file => !detectMediaType(file));
+    if (invalid.length) {
+      return status(st, `Unsupported file: ${invalid[0].name}`, "error");
+    }
+
+    submit.disabled = true;
+
+    let nextSort = Math.max(0, ...media.map(m => m.sort_order || 0)) + 10;
+    let uploaded = 0;
+    const failed = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const type = detectMediaType(file);
+
+      status(st, `Uploading ${i + 1} of ${files.length}...`);
+
+      const path = `${Date.now()}-${crypto.randomUUID()}-${escapeName(file.name)}`;
+      const up = await supa.storage.from("gallery-media").upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: contentTypeFor(file, type)
+      });
+
+      if (up.error) {
+        failed.push(`${file.name}: ${up.error.message}`);
+        continue;
+      }
+
+      const ins = await supa.from("gallery_media").insert({
+        category_id: categoryId,
+        media_type: type,
+        storage_path: path,
+        caption,
+        sort_order: nextSort
+      });
+
+      if (ins.error) {
+        await supa.storage.from("gallery-media").remove([path]);
+        failed.push(`${file.name}: ${ins.error.message}`);
+        continue;
+      }
+
+      uploaded += 1;
+      nextSort += 10;
+    }
+
+    submit.disabled = false;
+
+    if (uploaded > 0) {
+      event.currentTarget.reset();
+      await refreshAll();
+    }
+
+    if (!failed.length) {
+      status(st, `Uploaded ${uploaded} ${uploaded === 1 ? "file" : "files"}.`, "success");
+    } else if (uploaded > 0) {
+      status(st, `Uploaded ${uploaded}. ${failed.length} failed. Try the failed file(s) again.`, "error");
+      console.warn("Upload failures:", failed);
+    } else {
+      status(st, failed[0] || "Upload failed.", "error");
+      console.warn("Upload failures:", failed);
+    }
   });
 
   function renderMemories(){const list=document.getElementById("ownerMemoryList");if(!list)return;list.innerHTML="";memories.forEach((m,index)=>{const row=document.createElement("div");row.className="owner-list-row owner-memory-row";const fields=document.createElement("div");fields.className="owner-memory-fields";const title=document.createElement("input");title.className="owner-edit-input";title.value=m.title;const body=document.createElement("textarea");body.className="owner-edit-input owner-textarea";body.value=m.body;fields.append(title,body);const actions=document.createElement("div");actions.className="owner-row-actions";actions.append(actionButton("Save",async()=>{await supa.from("memories").update({title:title.value.trim(),body:body.value.trim()}).eq("id",m.id);await refreshAll();}),actionButton("\u2191",()=>moveMemory(index,-1)),actionButton("\u2193",()=>moveMemory(index,1)),actionButton("Delete",async()=>{if(!confirm("Delete this memory?"))return;await supa.from("memories").delete().eq("id",m.id);await refreshAll();},"danger"));row.append(fields,actions);list.appendChild(row);});if(!memories.length)list.innerHTML=`<div class="owner-empty">No memories yet.</div>`;}
